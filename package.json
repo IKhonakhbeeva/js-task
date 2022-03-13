@@ -1,0 +1,31 @@
+{
+    "name": "ogs-online-test-task",
+    "version": "1.0.0",
+    "description": "",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev": "webpack serve --progress --config webpack.config.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/necrokot/OGS-Online-Test-task.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/necrokot/OGS-Online-Test-task/issues"
+    },
+    "homepage": "https://github.com/necrokot/OGS-Online-Test-task#readme",
+    "devDependencies": {
+        "html-webpack-plugin": "^5.5.0",
+        "prettier": "^2.5.1",
+        "webpack": "^5.70.0",
+        "webpack-cli": "^4.9.2",
+        "webpack-dev-server": "^4.7.4"
+    },
+    "dependencies": {
+        "phaser": "^3.55.2"
+    }
+}
