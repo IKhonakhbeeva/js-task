@@ -6,8 +6,8 @@ function startGame() {
         type: Phaser.WEBGL,
         background: '#000000',
         parent: 'gameWrapper',
-        width: 1280,
-        height: 1024,
+        width: 640,
+        height: 512,
         render: {
             powerPreference: 'high-performance',
             mipmapFilter: 'LINEAR_MIPMAP_LINEAR',
@@ -28,14 +28,13 @@ function startGame() {
             context: audioContext,
         },
     }
-    // Rule 'no-new' is disabled becouse we need side effects from creating instance of Phaser Game, but no reasons to keep reference to that instance.
-    // eslint-disable-next-line no-new
     new Phaser.Game(phaserGameConfig)
 }
 
 function preload() {
     // load your assets here
-    // this.load.
+    this.load.setPath('assets')
+    this.load.image('01_star', 'symbols/01_star.png')
 }
 
 function update(tt, dt) {
@@ -43,8 +42,14 @@ function update(tt, dt) {
 }
 
 function create() {
+    // Global shortcut for current scene
     window.PHASER = this
+
     // start your code here
+    const sceneWidth = PHASER.sys.game.scale.gameSize.width
+    const sceneHeight = PHASER.sys.game.scale.gameSize.height
+    const stubImg = PHASER.add.image(sceneWidth / 2, sceneHeight / 2, '01_star')
+    stubImg.scale = 2
 }
 
 window.startGame = startGame
