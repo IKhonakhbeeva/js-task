@@ -4,7 +4,7 @@ function startGame() {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)()
     const phaserGameConfig = {
         type: Phaser.WEBGL,
-        background: '#000000',
+        backgroundColor: '#000000',
         parent: 'gameWrapper',
         width: 640,
         height: 512,
