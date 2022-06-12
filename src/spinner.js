@@ -1,13 +1,20 @@
+let minSpeed = 300
+let maxSpeed = 700
+let lastSpeed = 70
+
 export default class Spinner {
+    _spinSize = 3
+    _state = 'idle'
+    _acc = 200
     constructor(scene, symbols) {
         this.scene = scene
         this.symbols = symbols
-        this.spinSize = 3
-        const sceneWidth = scene.sys.game.scale.gameSize.width
-        const sceneHeight = scene.sys.game.scale.gameSize.height
+        this.speed = minSpeed + Math.random() * (maxSpeed - minSpeed)
+        // const sceneWidth = scene.sys.game.scale.gameSize.width
+        // const sceneHeight = scene.sys.game.scale.gameSize.height
         this.curUpImage = Math.floor(Math.random() * this.symbols.length)
         this.images = []
-        for (let i = 0; i <= this.spinSize; i++) {
+        for (let i = 0; i <= this._spinSize; i++) {
             let texture = (this.curUpImage - i) % this.symbols.length
             if (texture < 0) texture += this.symbols.length
             this.images[i] = this.scene.add.image().setTexture(this.symbols[texture])
@@ -20,8 +27,8 @@ export default class Spinner {
         let right = left + width
         let bottom = this.bottom
 
-        this.cellHeight = height / this.spinSize
-        for (let i = 0; i <= this.spinSize; i++) {
+        this.cellHeight = height / this._spinSize
+        for (let i = 0; i <= this._spinSize; i++) {
             let img = this.images[i]
             img.displayHeight = this.cellHeight
             img.displayWidth = width
@@ -40,17 +47,17 @@ export default class Spinner {
         path.lineTo(right, top)
         path.closePath()
 
-        for (let i = 1; i < this.spinSize; i++) {
+        for (let i = 1; i < this._spinSize; i++) {
             path.moveTo(left, top + this.cellHeight * i)
             path.lineTo(right, top + this.cellHeight * i)
         }
 
         path.strokePath()
     }
-    moveImage(img, dt) {
-        img.y += (dt / 1000) * this.speed
+    moveImage(img, delta) {
+        img.y += delta
         if (img.y >= this.bottom + this.cellHeight / 2) {
-            img.y -= (this.spinSize + 1) * this.cellHeight
+            img.y -= (this._spinSize + 1) * this.cellHeight
             this.curUpImage = (this.curUpImage + 1) % this.symbols.length
             // Uncomment for images of different sizes
             // let lastW = img.displayWidth
@@ -72,8 +79,44 @@ export default class Spinner {
         }
     }
     nextFrame(tt, dt) {
-        for (let img of this.images) {
-            this.moveImage(img, dt)
+        switch (this._state) {
+            case 'idle':
+                return
+            case 'start':
+                this.speed = minSpeed + Math.random() * (maxSpeed - minSpeed)
+                this._startTime = tt
+                this._state = 'running'
+                break
+            case 'stopping':
+                this.speed -= (this._acc * dt) / 1000
+                if (this.speed <= lastSpeed) {
+                    this._state = 'lastValue'
+                    this.speed = lastSpeed
+                }
+                break
         }
+        this.moveImages(dt)
+    }
+    moveImages(dt) {
+        let delta = (dt / 1000) * this.speed
+        if (this._state === 'lastValue') {
+            let minY = Math.min(...this.images.map(img => img.y))
+            if (minY + delta >= this.top + this.cellHeight / 2) {
+                this._state = 'idle'
+                delta = this.top + this.cellHeight / 2 - minY
+            }
+        }
+        for (let img of this.images) {
+            this.moveImage(img, delta)
+        }
+    }
+    start() {
+        this._state = 'start'
+    }
+    stop() {
+        this._state = 'stopping'
+    }
+    isIdle() {
+        return this._state === 'idle'
     }
 }
