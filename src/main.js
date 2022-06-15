@@ -7,7 +7,7 @@ function startGame() {
         type: Phaser.WEBGL,
         backgroundColor: '#DDDDDD',
         parent: 'gameWrapper',
-        width: 640,
+        width: 1000,
         height: 512,
         render: {
             powerPreference: 'high-performance',
@@ -44,11 +44,16 @@ function preload() {
 }
 
 function update(tt, dt) {
-    // use for doing smthing on every frame
-    if (!this._startButton.input.enabled && this.spinners.every(s => s.isIdle())) {
+    // We can reroll only after all spinners stopped
+    if (!this._startButton.input.enabled && this._spinners.every(s => s.isIdle())) {
         this._startButton.setInteractive({ useHandCursor: true })
     }
-    for (let spinner of this.spinners) {
+    // We can stop only when all spinners runs on full speed
+    if (!this._stopButton.input.enabled && this._spinners.every(s => s.isRunning())) {
+        this._stopButton.setInteractive({ useHandCursor: true })
+    }
+
+    for (let spinner of this._spinners) {
         spinner.nextFrame(tt, dt)
     }
 }
@@ -57,37 +62,74 @@ function create() {
     // Global shortcut for current scene
     window.PHASER = this
 
+    // Count sizes for spinners and buttons
+    const spinCount = 5
+    const sceneWidth = this.sys.game.scale.gameSize.width
+    const sceneHeight = this.sys.game.scale.gameSize.height
+    const indentHeight = sceneHeight * 0.1
+    const indentWidth = sceneWidth * 0.1
+    const spinWidth = (sceneWidth - 2 * indentWidth) / spinCount
+    const spinHeight = sceneHeight - 4 * indentHeight
+
     // Create spinners
     const symbols = ['star', 'circle', 'triangle', 'square']
-    this.spinners = []
-    for (let i = 0; i < 5; i++) {
-        this.spinners[i] = new Spinner(PHASER, symbols)
-        this.spinners[i].setBorders(50 + i * 100, 50, 100, 300)
+    this._spinners = []
+    for (let i = 0; i < spinCount; i++) {
+        this._spinners[i] = new Spinner(
+            PHASER,
+            symbols,
+            indentWidth + i * spinWidth,
+            indentHeight,
+            spinWidth,
+            spinHeight,
+        )
     }
 
-    // Create buttons
-    this.start = () => {
-        for (let spinner of this.spinners) {
+    // Create callbacks for buttons
+    this._startCallback = () => {
+        for (let spinner of this._spinners) {
             spinner.start()
         }
         this._startButton.disableInteractive()
-        this._stopButton.setInteractive({ useHandCursor: true })
-        setTimeout(this.stop, 3000)
+        this._timer = setTimeout(this._stopCallback, 4000)
     }
 
-    this.stop = () => {
+    this._stopCallback = () => {
         this._stopButton.disableInteractive()
-        for (let spinner of this.spinners) {
+        for (let spinner of this._spinners) {
             spinner.stop()
         }
+        clearTimeout(this._timer)
     }
 
-    this._startButton = this.add
-        .image(100, 400, 'start')
-        .setScale(0.3)
+    // Create buttons
+    this._startButton = createButton(
+        this,
+        sceneWidth / 3,
+        sceneHeight - 1.5 * indentHeight,
+        'start',
+        indentHeight,
+        this._startCallback,
+    )
+    this._stopButton = createButton(
+        this,
+        (sceneWidth * 2) / 3,
+        sceneHeight - 1.5 * indentHeight,
+        'stop',
+        indentHeight,
+        this._stopCallback,
+    )
+}
+
+function createButton(scene, x, y, texture, imgHeight, callback) {
+    let img = scene.add
+        .image(x, y, texture)
+        .on('pointerdown', callback)
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', this.start)
-    this._stopButton = this.add.image(300, 400, 'stop').setScale(0.3).on('pointerdown', this.stop)
+        .disableInteractive()
+    img.displayHeight = imgHeight
+    img.scaleX = img.scaleY
+    return img
 }
 
 window.startGame = startGame
